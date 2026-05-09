@@ -487,7 +487,6 @@ def evaluate_model(model, X_test, y_test, est_test):
 # --------------------------------------------------------------------------
 # 7. Plotting
 # --------------------------------------------------------------------------
-import os
 os.makedirs("results", exist_ok=True)
 
 def plot_history(history):
