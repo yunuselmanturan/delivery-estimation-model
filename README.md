@@ -11,10 +11,11 @@ the public Olist dataset from Kaggle.
 ```
 delivery_estimation/
 │
-├── delivery_estimation.py      # main script (everything is here)
-├── results                     #folder where the performance result of the model will go
-├── README.md                   # this file
-└── data/                       # put the 9 csv files from Kaggle here
+├── delivery_estimation.py                  # main script (everything is here)
+├── results                                 # folder where the performance result of the model will go
+├──delivery_estimation_model_report.docx    # report for the project
+├── README.md                               # this file
+└── data/                                   # put the 9 csv files from Kaggle here
     ├── olist_orders_dataset.csv
     ├── olist_order_items_dataset.csv
     ├── olist_customers_dataset.csv
