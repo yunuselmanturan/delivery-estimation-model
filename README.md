@@ -12,6 +12,7 @@ the public Olist dataset from Kaggle.
 delivery_estimation/
 │
 ├── delivery_estimation.py      # main script (everything is here)
+├── results                     #folder where the performance result of the model will go
 ├── README.md                   # this file
 └── data/                       # put the 9 csv files from Kaggle here
     ├── olist_orders_dataset.csv
@@ -56,11 +57,15 @@ The script will:
    interactions, log-transformed numerics, seller throughput, calendar
    features, region encoding, …).
 4. Split the data **70 % / 15 % / 15 %** (train / validation / test).
-5. Build and train an MLP (256 → 128 → 64 → 32 → 1) for up to 120 epochs
+5. Compute **target-encoded features** (mean delivery time per
+   seller→customer lane, per seller, per state) using **training rows
+   only**, to give the network high-signal categorical features without
+   leakage.
+6. Build and train an MLP (256 → 128 → 64 → 32 → 1) for up to 120 epochs
    with early-stopping and learning-rate decay.
-6. Report MAE, RMSE, R² and "accuracy within ±N days" for both the
+7. Report MAE, RMSE, R² and "accuracy within ±N days" for both the
    neural network **and the carrier's own estimate as a baseline**.
-7. Save five figures (`training_history.png`, `pred_vs_actual.png`,
+8. Save five figures (`training_history.png`, `pred_vs_actual.png`,
    `error_distribution.png`, `model_vs_carrier_scatter.png`,
    `accuracy_comparison.png`) and the model itself
    (`delivery_time_model.keras`).
@@ -140,42 +145,56 @@ prediction_days = model.predict(X_new).flatten()  # raw delivery time
 
 ## 7. Expected outputs
 
-A successful run should produce numbers in roughly this range
-(actual values depend on the random split and hyper-parameters):
+A successful run produces numbers like this (small variation between
+runs is normal because dropout and weight initialization use random
+draws):
 
 ```
-Training set   : (~67 000, ~45)
-Validation set : (~14 000, ~45)
-Test set       : (~14 000, ~45)
+Training set   : (66 504, 77)
+Validation set : (14 251, 77)
+Test set       : (14 251, 77)
 
 =========== Test-set performance ===========
-MAE  : ~2.4 days
-RMSE : ~3.4 days
-R^2  : ~0.55
+MAE  : 3.57 days
+RMSE : 5.55 days
+R^2  : 0.49
 ============================================
 
 === Accuracy within tolerance (Neural Network) ===
-  Within +/- 1 day(s):  ~32 %
-  Within +/- 2 day(s):  ~62 %    <-- headline number (target: 65-70%)
-  Within +/- 3 day(s):  ~76 %
-  Within +/- 5 day(s):  ~89 %
-  Within +/- 7 day(s):  ~95 %
+  Within +/- 1 day(s):  25.7 %
+  Within +/- 2 day(s):  47.1 %    <-- headline number
+  Within +/- 3 day(s):  61.5 %
+  Within +/- 5 day(s):  78.5 %
+  Within +/- 7 day(s):  86.7 %
 
 --- Baseline (carrier's estimated delivery date) ---
-  MAE  : ~3.0 days
+  MAE  : 12.5 days
 
 === Accuracy within tolerance (Carrier baseline) ===
-  Within +/- 2 day(s):  ~42 %
+  Within +/- 1 day(s):   2.8 %
+  Within +/- 2 day(s):   5.3 %
+  Within +/- 3 day(s):   7.6 %
+  Within +/- 5 day(s):  12.8 %
+  Within +/- 7 day(s):  22.5 %
 ```
 
-So the headline finding for the report is roughly:
+So the headline finding for the report:
 
-> The neural network predicts delivery time within **±2 days for
-> ~62-65 %** of orders on the test set, beating the carrier's own
-> estimate (~42 %) by **~20 percentage points** — and it does so
-> *without ever seeing* the carrier's prediction.
+> The neural network predicts delivery time with **MAE = 3.57 days
+> and R² = 0.49**, and gets within ±2 days of the actual delivery date
+> for **47 %** of orders — versus only **5 %** for the platform's
+> contractual estimate, an improvement of more than **40 percentage
+> points**. The model achieves this *without ever seeing* the carrier's
+> prediction during training.
 
-The script also produces four figures, ready to drop into the report:
+Note about the carrier baseline: Olist's `order_estimated_delivery_date`
+is set very generously (mean ≈ 24 days from purchase even when actual
+delivery is around 12 days), so the carrier's estimate is essentially
+a contractual upper bound rather than a real-time prediction. This is
+why its MAE is so large — it is not a "competing model" so much as a
+buffered service-level guarantee.
+
+The script also produces five figures, ready to drop into the report:
 
 | File                          | What it shows                                  |
 | ----------------------------- | ---------------------------------------------- |
@@ -186,12 +205,3 @@ The script also produces four figures, ready to drop into the report:
 | `accuracy_comparison.png`     | Bar chart: % within ±N days, model vs carrier  |
 
 ---
-
-## 8. Why this is the realistic ceiling
-
-Delivery time has irreducible noise — weather, traffic, individual
-driver, customs queues, warehouse staffing on that specific day. None
-of that is in the dataset, so no model can predict it. Published
-academic results on similar datasets land in the same MAE 2-3 day
-range. Pushing beyond ~70 % at ±2 days would require external data
-sources Olist does not provide.

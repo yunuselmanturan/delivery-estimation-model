@@ -2,7 +2,7 @@
 ==========================================================================
  Logistics Delivery Time Estimation using a Feed-Forward Neural Network
  Dataset : Brazilian E-Commerce Public Dataset by Olist (Kaggle)
- Author  : <your names here>
+ Author  : <Yunus TURAN - Paloma Ruiz MOLINA>
  Course  : Neural Network - Mendel University in Brno
 ==========================================================================
 
@@ -16,10 +16,6 @@ Modeling strategy
 The network is a regression MLP whose output is the raw delivery time
 in days. The model is trained ONLY on physical / temporal features
 (distance, weight, volume, calendar, seller throughput, region, etc.).
-
-The carrier's own estimate (`estimated_days`) is deliberately NOT used
-as an input feature: doing so would let the model "cheat" by copying the
-carrier instead of learning the underlying logistics from scratch.
 
 For context, after evaluation the script also reports how the carrier's
 own estimate would score on the same test set as a simple baseline.
@@ -491,6 +487,9 @@ def evaluate_model(model, X_test, y_test, est_test):
 # --------------------------------------------------------------------------
 # 7. Plotting
 # --------------------------------------------------------------------------
+import os
+os.makedirs("results", exist_ok=True)
+
 def plot_history(history):
     plt.figure(figsize=(10, 4))
 
@@ -507,7 +506,7 @@ def plot_history(history):
     plt.xlabel("Epoch"); plt.ylabel("MAE (days)"); plt.legend()
 
     plt.tight_layout()
-    plt.savefig("training_history.png", dpi=120)
+    plt.savefig("results/training_history.png", dpi=120)
     plt.show()
 
 
@@ -522,7 +521,7 @@ def plot_predictions(actual_days, pred_days):
     plt.title("Predicted vs. Actual delivery time")
     plt.legend()
     plt.tight_layout()
-    plt.savefig("pred_vs_actual.png", dpi=120)
+    plt.savefig("results/pred_vs_actual.png", dpi=120)
     plt.show()
 
 
@@ -556,7 +555,7 @@ def plot_error_distribution(actual_days, pred_days, est_days):
     plt.ylabel("orders")
 
     plt.tight_layout()
-    plt.savefig("error_distribution.png", dpi=120)
+    plt.savefig("results/error_distribution.png", dpi=120)
     plt.show()
 
 
@@ -593,7 +592,7 @@ def plot_model_vs_carrier(actual_days, pred_days, est_days):
     plt.suptitle("Model vs. carrier: predicted vs. actual delivery time",
                  y=1.02, fontsize=12)
     plt.tight_layout()
-    plt.savefig("model_vs_carrier_scatter.png", dpi=120, bbox_inches="tight")
+    plt.savefig("results/model_vs_carrier_scatter.png", dpi=120, bbox_inches="tight")
     plt.show()
 
 
@@ -632,7 +631,7 @@ def plot_accuracy_comparison(model_acc, base_acc):
     plt.grid(axis="y", linestyle=":", alpha=0.5)
     plt.legend(loc="upper left")
     plt.tight_layout()
-    plt.savefig("accuracy_comparison.png", dpi=120)
+    plt.savefig("results/accuracy_comparison.png", dpi=120)
     plt.show()
 
 
